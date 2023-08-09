@@ -81,13 +81,13 @@ resource "aws_iam_role_policy_attachment" "ecs_task_execution_role" {
 }
 
 
-# Create ECS task definition
 resource "aws_ecs_task_definition" "my_first_task" {
-  family                   = "helloword"
-  container_definitions    = jsonencode([
+  family                   = "helloword" # Naming our first task
+  container_definitions    = <<DEFINITION
+  [
     {
       "name": "helloword",
-      "image": aws_ecr_repository.helloword.repository_url,
+      "image": "${aws_ecr_repository.helloword.repository_url}",
       "essential": true,
       "portMappings": [
         {
@@ -96,15 +96,17 @@ resource "aws_ecs_task_definition" "my_first_task" {
         }
       ],
       "memory": 512,
-      "cpu": 256,
+      "cpu": 256
     }
-  ])
-  requires_compatibilities = ["FARGATE"]
-  network_mode             = "awsvpc"
-  memory                   = 512
-  cpu                      = 256
-  execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn
+  ]
+  DEFINITION
+  requires_compatibilities = ["FARGATE"] # Stating that we are using ECS Fargate
+  network_mode             = "awsvpc"    # Using awsvpc as our network mode as this is required for Fargate
+  memory                   = 512         # Specifying the memory our container requires
+  cpu                      = 256         # Specifying the CPU our container requires
+  execution_role_arn       = "${aws_iam_role.ecsTaskExecutionRole.arn}"
 }
+
 
 # Create ECS cluster
 resource "aws_ecs_cluster" "my_cluster" {
