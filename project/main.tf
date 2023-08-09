@@ -53,11 +53,11 @@ resource "aws_ecs_cluster" "my_cluster" {
 
 
 resource "aws_ecs_task_definition" "my_first_task" {
-  family                   = "helloword-td" # Naming our first task
+  family                   = "my-first-task" # Naming our first task
   container_definitions    = <<DEFINITION
   [
     {
-      "name": "helloword",
+      "name": "my-first-task",
       
       
       "image": "488777800893.dkr.ecr.eu-west-2.amazonaws.com/helloword",
