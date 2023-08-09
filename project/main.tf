@@ -59,7 +59,7 @@ resource "aws_ecs_task_definition" "my_first_task" {
     {
       "name": "helloword",
       
-      #"image": "${aws_ecr_repository.helloword.repository_url}",
+      
       "image": "488777800893.dkr.ecr.eu-west-2.amazonaws.com/helloword",
       "essential": true,
       "portMappings": [
