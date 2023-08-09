@@ -80,6 +80,7 @@ resource "aws_iam_role_policy_attachment" "ecs_task_execution_role" {
   policy_arn = aws_iam_policy.ecs_task_execution_policy.arn
 }
 
+
 # Create ECS task definition
 resource "aws_ecs_task_definition" "my_first_task" {
   family                   = "helloword"
