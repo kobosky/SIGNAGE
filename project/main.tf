@@ -46,16 +46,6 @@ resource "aws_ecr_repository" "helloword" {
 }
 
 
-
-
-# Create ECS cluster
-resource "aws_ecs_cluster" "my_cluster" {
-  name = "my-ecs-cluster"
-}
-
-# Note: You can add any other necessary resources and configurations here
-
-
 resource "aws_ecs_cluster" "my_cluster" {
   name = "my-cluster" # Naming the cluster
 }
