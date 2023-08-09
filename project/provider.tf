@@ -5,5 +5,6 @@
 
 provider "aws" {
   region  = var.aws_region
-  profile = "default"
+  shared_credentials_file = "C:/Users/Kobosky/.aws/credentials"
+  #profile = "default"
 }
