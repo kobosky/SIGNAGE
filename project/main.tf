@@ -41,8 +41,8 @@ resource "aws_default_subnet" "default_subnet_c" {
   availability_zone = "eu-west-2c"
 }
 
-resource "aws_ecr_repository" "my_first_ecr_repo" {
-  name = "my-first-ecr-repo"
+resource "aws_ecr_repository" "helloword" {
+  name = "helloword"
 }
 
 resource "aws_ecs_cluster" "my_cluster" {
@@ -51,12 +51,12 @@ resource "aws_ecs_cluster" "my_cluster" {
 
 
 resource "aws_ecs_task_definition" "my_first_task" {
-  family                   = "my-first-task" # Naming our first task
+  family                   = "helloword" # Naming our first task
   container_definitions    = <<DEFINITION
   [
     {
-      "name": "my-first-task",
-      "image": "${aws_ecr_repository.my_first_ecr_repo.repository_url}",
+      "name": "helloword",
+      "image": "${aws_ecr_repository.helloword.repository_url}",
       "essential": true,
       "portMappings": [
         {
