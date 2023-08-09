@@ -106,7 +106,8 @@ resource "aws_alb" "application_load_balancer" {
     "${aws_default_subnet.default_subnet_c.id}"
   ]
   # Referencing the security group
-  security_groups = ["${aws_security_group.load_balancer_security_group.id}"]
+  #security_groups = ["${aws_security_group.load_balancer_security_group.id}"]
+   security_groups = [aws_security_group.load_balancer_security_group.id]
 }
 
 # Creating a security group for the load balancer:
