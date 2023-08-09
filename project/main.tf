@@ -46,66 +46,6 @@ resource "aws_ecr_repository" "helloword" {
 }
 
 
-# Define ECS task execution role policy document
-data "aws_iam_policy_document" "ecs_task_execution_policy_document" {
-  statement {
-    actions = [
-      "ecr:GetAuthorizationToken",
-      "ecr:BatchCheckLayerAvailability",
-      "ecr:GetDownloadUrlForLayer",
-      "ecr:BatchGetImage",
-      "logs:CreateLogStream",
-      "logs:PutLogEvents",
-    ]
-
-    resources = ["*"]
-  }
-}
-
-# Create ECS task execution IAM policy
-resource "aws_iam_policy" "ecs_task_execution_policy" {
-  name   = "ecs-task-execution-role-policy"
-  policy = data.aws_iam_policy_document.ecs_task_execution_policy_document.json
-}
-
-# Create ECS task execution IAM role
-resource "aws_iam_role" "ecs_task_execution_role" {
-  name               = "ecs-task-execution-role"
-  assume_role_policy = data.aws_iam_policy_document.assume_role_policy.json
-}
-
-# Attach ECS task execution policy to IAM role
-resource "aws_iam_role_policy_attachment" "ecs_task_execution_role" {
-  role       = aws_iam_role.ecs_task_execution_role.name
-  policy_arn = aws_iam_policy.ecs_task_execution_policy.arn
-}
-
-
-resource "aws_ecs_task_definition" "my_first_task" {
-  family                   = "helloword" # Naming our first task
-  container_definitions    = <<DEFINITION
-  [
-    {
-      "name": "helloword",
-      "image": "${aws_ecr_repository.helloword.repository_url}",
-      "essential": true,
-      "portMappings": [
-        {
-          "containerPort": 3000,
-          "hostPort": 3000
-        }
-      ],
-      "memory": 512,
-      "cpu": 256
-    }
-  ]
-  DEFINITION
-  requires_compatibilities = ["FARGATE"] # Stating that we are using ECS Fargate
-  network_mode             = "awsvpc"    # Using awsvpc as our network mode as this is required for Fargate
-  memory                   = 512         # Specifying the memory our container requires
-  cpu                      = 256         # Specifying the CPU our container requires
-  execution_role_arn       = "${aws_iam_role.ecsTaskExecutionRole.arn}"
-}
 
 
 # Create ECS cluster
@@ -115,7 +55,7 @@ resource "aws_ecs_cluster" "my_cluster" {
 
 # Note: You can add any other necessary resources and configurations here
 
-/*
+
 resource "aws_ecs_cluster" "my_cluster" {
   name = "my-cluster" # Naming the cluster
 }
@@ -144,12 +84,12 @@ resource "aws_ecs_task_definition" "my_first_task" {
   network_mode             = "awsvpc"    # Using awsvpc as our network mode as this is required for Fargate
   memory                   = 512         # Specifying the memory our container requires
   cpu                      = 256         # Specifying the CPU our container requires
-  execution_role_arn       = "${aws_iam_role.ecsTaskExecutionRole.arn}"
+  execution_role_arn       = aws_iam_role.ecsTaskExecutionRole.arn
 }
 
 resource "aws_iam_role" "ecsTaskExecutionRole" {
   name               = "ecsTaskExecutionRole"
-  assume_role_policy = "${data.aws_iam_policy_document.assume_role_policy.json}"
+  assume_role_policy = data.aws_iam_policy_document.assume_role_policy.json
 }
 
 data "aws_iam_policy_document" "assume_role_policy" {
@@ -166,10 +106,10 @@ data "aws_iam_policy_document" "assume_role_policy" {
 
 
 resource "aws_iam_role_policy_attachment" "ecsTaskExecutionRole_policy" {
-  role       = "${aws_iam_role.ecsTaskExecutionRole.name}"
+  role       = aws_iam_role.ecsTaskExecutionRole.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
 }
-*/
+
 resource "aws_alb" "application_load_balancer" {
   name               = "test-lb-tf" # Naming our load balancer
   load_balancer_type = "application"
