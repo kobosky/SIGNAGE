@@ -41,11 +41,11 @@ resource "aws_default_subnet" "default_subnet_c" {
   availability_zone = "eu-west-2c"
 }
 
-/*
+
 resource "aws_ecr_repository" "helloword" {
   name = "helloword"
 }
-*/
+
 
 resource "aws_ecs_cluster" "my_cluster" {
   name = "my-cluster" # Naming the cluster
