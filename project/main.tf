@@ -41,10 +41,11 @@ resource "aws_default_subnet" "default_subnet_c" {
   availability_zone = "eu-west-2c"
 }
 
+/*
 resource "aws_ecr_repository" "helloword" {
   name = "helloword"
 }
-
+*/
 
 resource "aws_ecs_cluster" "my_cluster" {
   name = "my-cluster" # Naming the cluster
@@ -52,7 +53,7 @@ resource "aws_ecs_cluster" "my_cluster" {
 
 
 resource "aws_ecs_task_definition" "my_first_task" {
-  family                   = "helloword" # Naming our first task
+  family                   = "helloword-td" # Naming our first task
   container_definitions    = <<DEFINITION
   [
     {
