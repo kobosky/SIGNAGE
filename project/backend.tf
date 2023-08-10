@@ -4,7 +4,7 @@ terraform {
     bucket         = "dosignage-terraform-state"
     key            = "terraform-module/signage/terraform.tfstate"
     region         = "eu-west-2"
-    profile        = "my_aws_profile"
+    profile        = "terraform"
     #shared_credentials_files = ["C:/Users/Kobosky/.aws/credentials"]
     dynamodb_table = "terraform-state-lock"
   }
