@@ -152,7 +152,7 @@ resource "aws_lb" "application_load_balancer" {
   name                       = "test-lb-tf" # Naming our load balancer
   internal                   = false
   load_balancer_type         = "application"
-  security_groups            = ["${aws_security_group.load_balancer_security_group.id}"]
+  security_groups            = ["${aws_security_group.load_balancer_security_group.id}"] # Referencing the load balancer security group
   subnets                    = [aws_subnet.public_subnet_az1.id, aws_subnet.public_subnet_az2.id]
   enable_deletion_protection = false
 
