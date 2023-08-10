@@ -1,19 +1,98 @@
+# create vpc
+resource "aws_vpc" "signage-vpc" {
+  cidr_block           = var.vpc_cidr
+  instance_tenancy     = "default"
+  enable_dns_hostnames = true
 
-# Providing a reference to our default VPC
-resource "aws_default_vpc" "default_vpc" {
+  tags = {
+    Name = "signage-vpc"
+  }
 }
 
-# Providing a reference to our default subnets
-resource "aws_default_subnet" "default_subnet_a" {
-  availability_zone = "eu-west-2a"
+# create internet gateway and attach it to vpc
+resource "aws_internet_gateway" "internet_gateway" {
+  vpc_id = aws_vpc.signage-vpc.id
+
+  tags = {
+    Name = "signage-igw"
+  }
 }
 
-resource "aws_default_subnet" "default_subnet_b" {
-  availability_zone = "eu-west-2b"
+# use data source to get all avalablility zones in region
+data "aws_availability_zones" "available_zones" {}
+
+# create public subnet az1
+resource "aws_subnet" "public_subnet_az1" {
+  vpc_id                  = aws_vpc.signage-vpc.id
+  cidr_block              = var.public_subnet_az1_cidr
+  availability_zone       = data.aws_availability_zones.available_zones.names[0]
+  map_public_ip_on_launch = true
+
+  tags = {
+    Name = "signage-public-az1"
+  }
 }
 
-resource "aws_default_subnet" "default_subnet_c" {
-  availability_zone = "eu-west-2c"
+# create public subnet az2
+resource "aws_subnet" "public_subnet_az2" {
+  vpc_id                  = aws_vpc.signage-vpc.id
+  cidr_block              = var.public_subnet_az2_cidr
+  availability_zone       = data.aws_availability_zones.available_zones.names[1]
+  map_public_ip_on_launch = true
+
+  tags = {
+    Name = "signage-public-az2"
+  }
+}
+
+# create route table and add public route
+resource "aws_route_table" "public_route_table" {
+  vpc_id = aws_vpc.signage-vpc.id
+
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_internet_gateway.internet_gateway.id
+  }
+
+  tags = {
+    Name = "signage-public-rt"
+  }
+}
+
+# associate public subnet az1 to "public route table"
+resource "aws_route_table_association" "public_subnet_az1_rt_association" {
+  subnet_id      = aws_subnet.public_subnet_az1.id
+  route_table_id = aws_route_table.public_route_table.id
+}
+
+# associate public subnet az2 to "public route table"
+resource "aws_route_table_association" "public_subnet_az2_rt_association" {
+  subnet_id      = aws_subnet.public_subnet_az2.id
+  route_table_id = aws_route_table.public_route_table.id
+}
+
+# create private app subnet az1
+resource "aws_subnet" "private_app_subnet_az1" {
+  vpc_id                  = aws_vpc.signage-vpc.id
+  cidr_block              = var.private_subnet_app_az1_cidr
+  availability_zone       = data.aws_availability_zones.available_zones.names[0]
+  map_public_ip_on_launch = false
+
+  tags = {
+    Name = "signage-private-app-az1"
+  }
+}
+
+# create private app subnet az2
+resource "aws_subnet" "private_app_subnet_az2" {
+  vpc_id                  = aws_vpc.signage-vpc.id
+  cidr_block              = var.private_subnet_app_az2_cidr
+  availability_zone       = data.aws_availability_zones.available_zones.names[1]
+  map_public_ip_on_launch = false
+
+  tags = {
+    Name = "signage-private-app-az2"
+  }
 }
 
 resource "aws_ecs_cluster" "my_cluster" {
@@ -68,20 +147,26 @@ resource "aws_iam_role_policy_attachment" "ecsTaskExecutionRole_policy" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
 }
 
-resource "aws_alb" "application_load_balancer" {
-  name               = "test-lb-tf" # Naming our load balancer
-  load_balancer_type = "application"
-  subnets = [ # Referencing the default subnets
-    "${aws_default_subnet.default_subnet_a.id}",
-    "${aws_default_subnet.default_subnet_b.id}",
-    "${aws_default_subnet.default_subnet_c.id}"
-  ]
-  # Referencing the security group
-  security_groups = ["${aws_security_group.load_balancer_security_group.id}"]
+# create application load balancer
+resource "aws_lb" "application_load_balancer" {
+  name                       = "test-lb-tf" # Naming our load balancer
+  internal                   = false
+  load_balancer_type         = "application"
+  security_groups            = ["${aws_security_group.load_balancer_security_group.id}"]
+  subnets                    = [aws_subnet.public_subnet_az1.id, aws_subnet.public_subnet_az2.id]
+  enable_deletion_protection = false
+
+  tags = {
+    Name = "signage-alb"
+  }
 }
 
 # Creating a security group for the load balancer:
 resource "aws_security_group" "load_balancer_security_group" {
+  name        = "signage-alb-sg"
+  description = "enable http/https access on port 80"
+  vpc_id = aws_vpc.signage-vpc.id
+
   ingress {
     from_port   = 80
     to_port     = 80
@@ -102,11 +187,11 @@ resource "aws_lb_target_group" "target_group" {
   port        = 80
   protocol    = "HTTP"
   target_type = "ip"
-  vpc_id      = "${aws_default_vpc.default_vpc.id}" # Referencing the default VPC
+  vpc_id      = "${aws_vpc.signage-vpc.id}" # Referencing the VPC
 }
 
 resource "aws_lb_listener" "listener" {
-  load_balancer_arn = "${aws_alb.application_load_balancer.arn}" # Referencing our load balancer
+  load_balancer_arn = "${aws_lb.application_load_balancer.arn}" # Referencing our load balancer
   port              = "80"
   protocol          = "HTTP"
   default_action {
@@ -129,7 +214,7 @@ resource "aws_ecs_service" "my_first_service" {
   }
 
   network_configuration {
-    subnets          = ["${aws_default_subnet.default_subnet_a.id}", "${aws_default_subnet.default_subnet_b.id}", "${aws_default_subnet.default_subnet_c.id}"]
+    subnets          = ["${aws_subnet.public_subnet_az1.id}", "${aws_subnet.public_subnet_az2.id}"]
     assign_public_ip = true                                                # Providing our containers with public IPs
     security_groups  = ["${aws_security_group.service_security_group.id}"] # Setting the security group
   }
@@ -137,6 +222,9 @@ resource "aws_ecs_service" "my_first_service" {
 
 
 resource "aws_security_group" "service_security_group" {
+  name        = "service-sg"
+  description = "enable http access on port 80"
+  vpc_id      = aws_vpc.signage-vpc.id
   ingress {
     from_port = 0
     to_port   = 0
