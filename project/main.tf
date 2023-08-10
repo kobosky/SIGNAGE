@@ -1,28 +1,3 @@
-resource "aws_s3_bucket" "terraform_state"{
-    bucket = "sprints-remote-statefile"
-    lifecycle {
-        prevent_destroy = false
-  } 
-}
-
-resource "aws_s3_bucket_versioning" "enable"{
-    bucket = aws_s3_bucket.terraform_state.id
-    versioning_configuration {
-        status = "Enabled"
-    }
-}
-
-resource "aws_dynamodb_table" "terraform_locks" {
-    name = "sprints-locks"
-    billing_mode = "PAY_PER_REQUEST"
-    hash_key     = "LockID"
-    attribute {
-        name = "LockID"
-        type = "S"
-    }
-}
-
-
 
 # Providing a reference to our default VPC
 resource "aws_default_vpc" "default_vpc" {
@@ -41,12 +16,6 @@ resource "aws_default_subnet" "default_subnet_c" {
   availability_zone = "eu-west-2c"
 }
 
-/*
-resource "aws_ecr_repository" "helloword" {
-  name = "helloword"
-}
-*/
-
 resource "aws_ecs_cluster" "my_cluster" {
   name = "my-cluster" # Naming the cluster
 }
@@ -58,9 +27,7 @@ resource "aws_ecs_task_definition" "my_first_task" {
   [
     {
       "name": "my-first-task",
-      
-      
-      "image": "488777800893.dkr.ecr.eu-west-2.amazonaws.com/helloword",
+      "image": "488777800893.dkr.ecr.eu-west-2.amazonaws.com/helloword:latest",
       "essential": true,
       "portMappings": [
         {
@@ -77,12 +44,12 @@ resource "aws_ecs_task_definition" "my_first_task" {
   network_mode             = "awsvpc"    # Using awsvpc as our network mode as this is required for Fargate
   memory                   = 512         # Specifying the memory our container requires
   cpu                      = 256         # Specifying the CPU our container requires
-  execution_role_arn       = aws_iam_role.ecsTaskExecutionRole.arn
+  execution_role_arn       = "${aws_iam_role.ecsTaskExecutionRole.arn}"
 }
 
 resource "aws_iam_role" "ecsTaskExecutionRole" {
   name               = "ecsTaskExecutionRole"
-  assume_role_policy = data.aws_iam_policy_document.assume_role_policy.json
+  assume_role_policy = "${data.aws_iam_policy_document.assume_role_policy.json}"
 }
 
 data "aws_iam_policy_document" "assume_role_policy" {
@@ -96,10 +63,8 @@ data "aws_iam_policy_document" "assume_role_policy" {
   }
 }
 
-
-
 resource "aws_iam_role_policy_attachment" "ecsTaskExecutionRole_policy" {
-  role       = aws_iam_role.ecsTaskExecutionRole.name
+  role       = "${aws_iam_role.ecsTaskExecutionRole.name}"
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
 }
 
@@ -112,8 +77,7 @@ resource "aws_alb" "application_load_balancer" {
     "${aws_default_subnet.default_subnet_c.id}"
   ]
   # Referencing the security group
-  #security_groups = ["${aws_security_group.load_balancer_security_group.id}"]
-   security_groups = [aws_security_group.load_balancer_security_group.id]
+  security_groups = ["${aws_security_group.load_balancer_security_group.id}"]
 }
 
 # Creating a security group for the load balancer:
