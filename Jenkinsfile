@@ -2,7 +2,7 @@ pipeline {
     agent any
     environment {
         AWS_REGION = 'eu-west-2'
-        AWS_ACCOUNT_ID = '488777800893'
+        AWS_ACCOUNT_ID = '767398087803'
     }
     stages {
         stage('Checkout') {
