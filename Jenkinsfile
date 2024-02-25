@@ -14,7 +14,7 @@ pipeline {
             steps {
                 dir('project') {
                     withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: 'my-aws-credentials-2', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
-                        sh 'terraform init'
+                        sh 'terraform init -reconfigure'
                     }
                 }
             }
