@@ -14,7 +14,7 @@ pipeline {
             steps {
                 dir('project') {
                     withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: 'my-aws-credentials-2', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
-                        sh 'start /B terraform init'
+                        sh 'terraform init'
                     }
                 }
             }
@@ -23,8 +23,7 @@ pipeline {
             steps {
                 dir('project') {
                     withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: 'my-aws-credentials-2', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
-                        // Use start /B instead of nohup
-                        sh "start /B terraform apply --auto-approve"
+                        sh "terraform apply --auto-approve"
                     }
                 }
             }
