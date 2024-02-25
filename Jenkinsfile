@@ -23,7 +23,7 @@ pipeline {
             steps {
                 dir('project') {
                     withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: 'my-aws-credentials-2', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
-                        bat "terraform apply --auto-approve"
+                        bat "terraform destroy --auto-approve"
                     }
                 }
             }
