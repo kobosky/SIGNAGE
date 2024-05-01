@@ -1,5 +1,9 @@
 pipeline {
     agent any
+    parameters {
+        choice(name: 'ACTION', choices: ['apply', 'destroy'], description: 'Select action to perform')
+        booleanParam(name: 'executeTest', defaultValue: true, description: 'Apply or Destroy?')
+    }
     environment {
         AWS_REGION = 'eu-west-2'
         AWS_ACCOUNT_ID = '767398087803'
@@ -14,18 +18,24 @@ pipeline {
             steps {
                 dir('project') {
                     withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: 'my-aws-credentials-2', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
-                        // Use bat 'terraform init' or Use sh 'terraform init' for linux
                         bat 'terraform init'
                     }
                 }
             }
         }
-        stage('Terraform Action') {
+        stage('Terraform Apply/Destroy') {
+            when {
+                expression {
+                    params.executeTest
+                }
+            }
             steps {
                 dir('project') {
                     withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: 'my-aws-credentials-2', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
-                        // Use bat 'terraform init' or Use sh 'terraform init' for linux
-                        bat "terraform destroy --auto-approve"
+                        script {
+                            def terraformCommand = params.ACTION == 'apply' ? 'apply --auto-approve' : 'destroy --auto-approve'
+                            bat "terraform ${terraformCommand}"
+                        }
                     }
                 }
             }
