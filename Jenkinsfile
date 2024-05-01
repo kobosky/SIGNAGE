@@ -18,19 +18,28 @@ pipeline {
             steps {
                 dir('project') {
                     withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: 'my-aws-credentials-2', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
+                        // Use bat 'terraform init' or Use sh 'terraform init' for linux
                         bat 'terraform init'
                     }
                 }
             }
         }
         stage('Terraform Apply/Destroy') {
+            when {
+                expression {
+                    params.executeTest
+                }
+            }
             steps {
-                script {
-                    def terraformCommand = params.ACTION == 'apply' ? 'apply --auto-approve' : 'destroy --auto-approve'
-                    def selectedEnvironment = input message: "Select the environment to deploy to", ok: "Done", parameters: [choice(name: 'ENV', choices: ['dev','staging', 'prod'], description: 'Select one to perform')]
-                    echo "Executing Terraform ${params.ACTION}..."
-                    echo "Deploying to ${selectedEnvironment.ENV}"
-                    bat "terraform ${terraformCommand}"
+                dir('project') {
+                    withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: 'my-aws-credentials-2', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
+                        script {
+                            def terraformCommand = params.ACTION == 'apply' ? 'apply --auto-approve' : 'destroy --auto-approve'
+                            echo "Executing Terraform ${params.ACTION}..."
+                            // Use bat 'terraform init' or Use sh 'terraform init' for linux
+                            bat "terraform ${terraformCommand}"
+                        }
+                    }
                 }
             }
         }
