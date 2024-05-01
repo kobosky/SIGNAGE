@@ -18,6 +18,7 @@ pipeline {
             steps {
                 dir('project') {
                     withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: 'my-aws-credentials-2', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
+                        // Use bat 'terraform init' or Use sh 'terraform init' for linux
                         bat 'terraform init'
                     }
                 }
@@ -34,6 +35,7 @@ pipeline {
                     withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: 'my-aws-credentials-2', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
                         script {
                             def terraformCommand = params.ACTION == 'apply' ? 'apply --auto-approve' : 'destroy --auto-approve'
+                            // Use bat 'terraform init' or Use sh 'terraform init' for linux
                             bat "terraform ${terraformCommand}"
                         }
                     }
