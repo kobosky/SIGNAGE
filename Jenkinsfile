@@ -24,17 +24,12 @@ pipeline {
             }
         }
         stage('Terraform Apply/Destroy') {
-            when {
-                expression {
-                    params.executeTest
-                }
-            }
             steps {
                 script {
                     def terraformCommand = params.ACTION == 'apply' ? 'apply --auto-approve' : 'destroy --auto-approve'
                     def selectedEnvironment = input message: "Select the environment to deploy to", ok: "Done", parameters: [choice(name: 'ENV', choices: ['dev','staging', 'prod'], description: 'Select one to perform')]
                     echo "Executing Terraform ${params.ACTION}..."
-                    echo "Deploying to ${selectedEnvironment}"
+                    echo "Deploying to ${selectedEnvironment.ENV}"
                     bat "terraform ${terraformCommand}"
                 }
             }
