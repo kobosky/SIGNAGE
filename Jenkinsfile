@@ -18,13 +18,20 @@ pipeline {
             steps {
                 dir('project') {
                     withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: 'my-aws-credentials-2', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
-                        // Use bat 'terraform init' or Use sh 'terraform init' for linux
                         bat 'terraform init'
                     }
                 }
             }
         }
         stage('Terraform Apply/Destroy') {
+            input {
+                message "Select the environment to deploy to"
+                ok "Done"
+                parameters {
+                    choice(name: 'ONE', choices: ['dev','staging', 'prod'], description: 'Select one to perform')
+                    choice(name: 'TWO', choices: ['dev','staging', 'prod'], description: 'Select one to perform')
+                }
+            }
             when {
                 expression {
                     params.executeTest
@@ -36,7 +43,8 @@ pipeline {
                         script {
                             def terraformCommand = params.ACTION == 'apply' ? 'apply --auto-approve' : 'destroy --auto-approve'
                             echo "Executing Terraform ${params.ACTION}..."
-                            // Use bat 'terraform init' or Use sh 'terraform init' for linux
+							echo "Executing Deploying ${params.ONE}..."
+							echo "Executing Deploying ${params.TWO}..."
                             bat "terraform ${terraformCommand}"
                         }
                     }
